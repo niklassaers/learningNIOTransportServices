@@ -1,0 +1,7 @@
+/.DS_Store
+/*/.DS_Store
+/client/Package.resolved
+/client/.build
+/client/sslTest.xcodeproj
+/server/server.cert
+/server/server.key
