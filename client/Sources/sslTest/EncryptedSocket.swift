@@ -1,8 +1,5 @@
 import Foundation
 import NIO
-//import NIOExtras
-//import NIOSSL
-//import NIOTLS
 import NIOTransportServices
 import Network
 
@@ -88,6 +85,7 @@ public class EncryptedSocket {
                 return channel.pipeline.addHandlers([dataHandler], position: .last)
             }
             .tlsConfigIgnoreCertificateValidity()
+            // .tlsConfigOneTrustedCert()
     }
 
 }
@@ -97,28 +95,39 @@ extension NIOTSConnectionBootstrap {
     func tlsConfigDefault() -> NIOTSConnectionBootstrap {
         return self.tlsOptions(.init()) // To remove TLS (unencrypted), just return self
     }
+    
 
-    /*
-     func tlsConfigOneTrustedCert() -> NIOTSConnectionBootstrap {
-     let options = NWProtocolTLS.Options()
-     let verifyQueue = DispatchQueue(label: "verifyQueue")
-     let mySelfSignedCert: SecCertificate = getCert() // You must implement this!
-     let verifyBlock: sec_protocol_verify_t = { (metadata, trust, verifyCompleteCB) in
-     let actualTrust = sec_trust_copy_ref(trust).takeRetainedValue()
-     SecTrustSetAnchorCertificates(actualTrust, [mySelfSignedCert] as CFArray)
-     SecTrustEvaluateAsync(actualTrust, verifyQueue) { (_, result) in
-     switch result {
-     case .proceed, .unspecified:
-     verifyCompleteCB(true)
-     default:
-     verifyCompleteCB(false)
-     }
-     }
-     }
-     
-     sec_protocol_options_set_verify_block(options.securityProtocolOptions, verifyBlock, verifyQueue)
-     return self.tlsOptions(options)
-     }*/
+    func getCert() -> SecCertificate {
+        let path = "/tmp/server.der"
+        let data: Data = try! Data(contentsOf: URL(fileURLWithPath: path))
+        let allocator = CFAllocatorGetDefault()!
+        _ = allocator.retain()
+        let cert = SecCertificateCreateWithData(allocator.takeRetainedValue(), data as NSData)
+        allocator.release()
+        return cert!
+    }
+
+    
+    func tlsConfigOneTrustedCert() -> NIOTSConnectionBootstrap {
+        let options = NWProtocolTLS.Options()
+        let verifyQueue = DispatchQueue(label: "verifyQueue")
+        let mySelfSignedCert: SecCertificate = getCert()
+        let verifyBlock: sec_protocol_verify_t = { (metadata, trust, verifyCompleteCB) in
+            let actualTrust = sec_trust_copy_ref(trust).takeRetainedValue()
+            SecTrustSetAnchorCertificates(actualTrust, [mySelfSignedCert] as CFArray)
+            SecTrustEvaluateAsync(actualTrust, verifyQueue) { (_, result) in
+                switch result {
+                case .proceed, .unspecified:
+                    verifyCompleteCB(true)
+                default:
+                    verifyCompleteCB(false)
+                }
+            }
+        }
+        
+        sec_protocol_options_set_verify_block(options.securityProtocolOptions, verifyBlock, verifyQueue)
+        return self.tlsOptions(options)
+    }
 
     func tlsConfigIgnoreCertificateValidity() -> NIOTSConnectionBootstrap {
         let options = NWProtocolTLS.Options()
