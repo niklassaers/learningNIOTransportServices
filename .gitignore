@@ -5,3 +5,6 @@
 /client/sslTest.xcodeproj
 /server/server.cert
 /server/server.key
+/server/node_modules
+/server/server.der
+/server/yarn.lock
