@@ -3,7 +3,7 @@ import XCTest
 
 final class sslTestTests: XCTestCase {
     func testEncryptedSocket() {
-        let socket = try! sslTest.EncryptedSocket(hostname: "localhost", port: 3000)
+        let socket = try! sslTest.EncryptedSocket(hostname: "sample.saers.com", port: 4433)
         try! socket.connect(timeout: 2000)
         let bytes: [sslTest.Byte] = Array("GET /".utf8)
         try! socket.send(bytes: bytes)

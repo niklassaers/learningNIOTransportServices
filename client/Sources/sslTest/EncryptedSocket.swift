@@ -84,8 +84,8 @@ public class EncryptedSocket {
             .channelInitializer { channel in
                 return channel.pipeline.addHandlers([dataHandler], position: .last)
             }
-            .tlsConfigIgnoreCertificateValidity()
-            // .tlsConfigOneTrustedCert()
+            .tlsConfigOneTrustedCert()
+            //.tlsConfigIgnoreCertificateValidity()
     }
 
 }
@@ -100,10 +100,7 @@ extension NIOTSConnectionBootstrap {
     func getCert() -> SecCertificate {
         let path = "/tmp/server.der"
         let data: Data = try! Data(contentsOf: URL(fileURLWithPath: path))
-        let allocator = CFAllocatorGetDefault()!
-        _ = allocator.retain()
-        let cert = SecCertificateCreateWithData(allocator.takeRetainedValue(), data as NSData)
-        allocator.release()
+        let cert = SecCertificateCreateWithData(nil, data as CFData)
         return cert!
     }
 
@@ -115,6 +112,7 @@ extension NIOTSConnectionBootstrap {
         let verifyBlock: sec_protocol_verify_t = { (metadata, trust, verifyCompleteCB) in
             let actualTrust = sec_trust_copy_ref(trust).takeRetainedValue()
             SecTrustSetAnchorCertificates(actualTrust, [mySelfSignedCert] as CFArray)
+            SecTrustSetPolicies(actualTrust, SecPolicyCreateSSL(true, nil))
             SecTrustEvaluateAsync(actualTrust, verifyQueue) { (_, result) in
                 switch result {
                 case .proceed, .unspecified:

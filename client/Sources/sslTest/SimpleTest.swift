@@ -11,7 +11,7 @@ class SimpleTest {
         sec_protocol_options_set_peer_authentication_required(options.securityProtocolOptions, false)
         
         let group = NIOTSEventLoopGroup()
-        NIOTSConnectionBootstrap(group: group).tlsOptions(options).connect(host: "127.0.0.1", port: 3000).whenComplete {
+        NIOTSConnectionBootstrap(group: group).tlsOptions(options).connect(host: "sample.saers.com", port: 4433).whenComplete {
             print($0)
         }
         dispatchMain()
