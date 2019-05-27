@@ -97,7 +97,7 @@ extension NIOTSConnectionBootstrap {
     }
     
 
-    func getCert() -> SecCertificate {
+    class func getCert() -> SecCertificate {
         let path = "/tmp/server.der"
         let data: Data = try! Data(contentsOf: URL(fileURLWithPath: path))
         let cert = SecCertificateCreateWithData(nil, data as CFData)
@@ -108,7 +108,7 @@ extension NIOTSConnectionBootstrap {
     func tlsConfigOneTrustedCert() -> NIOTSConnectionBootstrap {
         let options = NWProtocolTLS.Options()
         let verifyQueue = DispatchQueue(label: "verifyQueue")
-        let mySelfSignedCert: SecCertificate = getCert()
+        let mySelfSignedCert: SecCertificate = NIOTSConnectionBootstrap.getCert()
         let verifyBlock: sec_protocol_verify_t = { (metadata, trust, verifyCompleteCB) in
             let actualTrust = sec_trust_copy_ref(trust).takeRetainedValue()
             SecTrustSetAnchorCertificates(actualTrust, [mySelfSignedCert] as CFArray)
